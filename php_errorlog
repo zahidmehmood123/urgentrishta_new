@@ -1,0 +1,39 @@
+[11-Mar-2021 07:24:23 UTC] PHP Fatal error:  require(): Failed opening required '/home/customer/www/urgentrishta.co/love1/vendor/composer/../symfony/translation/Resources/functions.php' (include_path='.:/usr/local/php73/pear') in /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php on line 69
+[11-Mar-2021 07:24:33 UTC] PHP Fatal error:  require(): Failed opening required '/home/customer/www/urgentrishta.co/love1/vendor/composer/../symfony/translation/Resources/functions.php' (include_path='.:/usr/local/php73/pear') in /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php on line 69
+[11-Mar-2021 07:27:27 UTC] PHP Warning:  Uncaught ErrorException: require(/home/customer/www/urgentrishta.co/love1/vendor/composer/../symfony/translation/Resources/functions.php): failed to open stream: No such file or directory in /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php:69
+Stack trace:
+#0 /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php(69): Composer\Util\ErrorHandler::handle(2, 'require(/home/c...', '/home/customer/...', 69, Array)
+#1 /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php(69): require()
+#2 /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php(59): composerRequire277813d1c194c843868f8d6f987ab422('a1105708a18b769...', '/home/customer/...')
+#3 /home/customer/www/urgentrishta.co/love1/vendor/autoload.php(7): ComposerAutoloaderInit277813d1c194c843868f8d6f987ab422::getLoader()
+#4 /home/customer/www/urgentrishta.co/love1/vendor/laravel/framework/src/Illuminate/Foundation/ComposerScripts.php(43): require_once('/home/customer/...')
+#5 phar in /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php on line 69
+[11-Mar-2021 07:27:27 UTC] PHP Fatal error:  composerRequire277813d1c194c843868f8d6f987ab422(): Failed opening required '/home/customer/www/urgentrishta.co/love1/vendor/composer/../symfony/translation/Resources/functions.php' (include_path='.:/usr/local/php73/pear') in /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php on line 69
+[11-Mar-2021 07:28:40 UTC] PHP Warning:  Uncaught ErrorException: require(/home/customer/www/urgentrishta.co/love1/vendor/composer/../symfony/translation/Resources/functions.php): failed to open stream: No such file or directory in /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php:69
+Stack trace:
+#0 /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php(69): Composer\Util\ErrorHandler::handle(2, 'require(/home/c...', '/home/customer/...', 69, Array)
+#1 /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php(69): require()
+#2 /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php(59): composerRequire277813d1c194c843868f8d6f987ab422('a1105708a18b769...', '/home/customer/...')
+#3 /home/customer/www/urgentrishta.co/love1/vendor/autoload.php(7): ComposerAutoloaderInit277813d1c194c843868f8d6f987ab422::getLoader()
+#4 /home/customer/www/urgentrishta.co/love1/vendor/laravel/framework/src/Illuminate/Foundation/ComposerScripts.php(43): require_once('/home/customer/...')
+#5 phar in /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php on line 69
+[11-Mar-2021 07:28:40 UTC] PHP Fatal error:  composerRequire277813d1c194c843868f8d6f987ab422(): Failed opening required '/home/customer/www/urgentrishta.co/love1/vendor/composer/../symfony/translation/Resources/functions.php' (include_path='.:/usr/local/php73/pear') in /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php on line 69
+[11-Mar-2021 07:29:49 UTC] PHP Warning:  Uncaught ErrorException: require(/home/customer/www/urgentrishta.co/love1/vendor/composer/../symfony/translation/Resources/functions.php): failed to open stream: No such file or directory in /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php:71
+Stack trace:
+#0 /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php(71): Composer\Util\ErrorHandler::handle(2, 'require(/home/c...', '/home/customer/...', 71, Array)
+#1 /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php(71): require()
+#2 /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php(61): composerRequire277813d1c194c843868f8d6f987ab422('a1105708a18b769...', '/home/customer/...')
+#3 /home/customer/www/urgentrishta.co/love1/vendor/autoload.php(7): ComposerAutoloaderInit277813d1c194c843868f8d6f987ab422::getLoader()
+#4 /home/customer/www/urgentrishta.co/love1/vendor/laravel/framework/src/Illuminate/Foundation/ComposerScripts.php(43): require_once('/home/customer/...')
+#5 phar in /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php on line 71
+[11-Mar-2021 07:29:49 UTC] PHP Fatal error:  composerRequire277813d1c194c843868f8d6f987ab422(): Failed opening required '/home/customer/www/urgentrishta.co/love1/vendor/composer/../symfony/translation/Resources/functions.php' (include_path='.:/usr/local/php73/pear') in /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php on line 71
+[11-Mar-2021 07:29:56 UTC] PHP Warning:  Uncaught ErrorException: require(/home/customer/www/urgentrishta.co/love1/vendor/composer/../symfony/translation/Resources/functions.php): failed to open stream: No such file or directory in /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php:71
+Stack trace:
+#0 /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php(71): Composer\Util\ErrorHandler::handle(2, 'require(/home/c...', '/home/customer/...', 71, Array)
+#1 /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php(71): require()
+#2 /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php(61): composerRequire277813d1c194c843868f8d6f987ab422('a1105708a18b769...', '/home/customer/...')
+#3 /home/customer/www/urgentrishta.co/love1/vendor/autoload.php(7): ComposerAutoloaderInit277813d1c194c843868f8d6f987ab422::getLoader()
+#4 /home/customer/www/urgentrishta.co/love1/vendor/laravel/framework/src/Illuminate/Foundation/ComposerScripts.php(43): require_once('/home/customer/...')
+#5 phar in /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php on line 71
+[11-Mar-2021 07:29:56 UTC] PHP Fatal error:  composerRequire277813d1c194c843868f8d6f987ab422(): Failed opening required '/home/customer/www/urgentrishta.co/love1/vendor/composer/../symfony/translation/Resources/functions.php' (include_path='.:/usr/local/php73/pear') in /home/customer/www/urgentrishta.co/love1/vendor/composer/autoload_real.php on line 71
+[11-Mar-2021 08:17:15 UTC] PHP Fatal error:  require(): Failed opening required '/home/customer/www/urgentrishta.co/love1/vendor/autoload.php' (include_path='.:/usr/local/php73/pear') in /home/customer/www/urgentrishta.co/love1/artisan on line 18
