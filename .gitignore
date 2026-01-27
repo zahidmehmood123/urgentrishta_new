@@ -1,0 +1,43 @@
+# Laravel / PHP
+/vendor/
+/.env
+/.env.*
+!.env.example
+/.phpunit.cache/
+/storage/*.key
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
+/storage/logs/
+/storage/clockwork/
+/bootstrap/cache/*.php
+
+# Node / frontend
+/node_modules/
+/public/hot
+/public/storage
+/npm-debug.log
+/yarn-error.log
+
+# Archives / binaries (prevents huge pushes)
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+composer.phar
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local analysis outputs
+allfiles.txt
+
+# User-generated uploads (should not be in git)
+/public/users/
+/public/couples/
+/storage/app/public/
+
