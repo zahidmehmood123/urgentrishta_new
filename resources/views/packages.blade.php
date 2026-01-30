@@ -150,43 +150,68 @@
         </div>
     </div>
 </section>
+@php
+    $standardPackages = $standardPackages ?? collect();
+    $premiumPackages = $premiumPackages ?? collect();
+    if ($standardPackages->isEmpty() && $premiumPackages->isEmpty()) {
+        $standardPackages = collect($packages ?? []);
+    }
+@endphp
 <section class="slice sct-color-1 pricing-plans pricing-plans--style-1 has-bg-cover bg-size-cover" style=" background-position: bottom bottom;">
     <div class="container ss-container">
         <span class="clearfix"></span>
+        @if(!$standardPackages->isEmpty())
         <div class="row justify-content-center">
-            @foreach ($packages as $package)
+            <div class="col-12 text-center mb-3">
+                <h2 class="heading heading-3 strong-600 col-black">Standard Packages (Online Payment)</h2>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            @foreach ($standardPackages as $package)
             @if($package->dataid!="99")
             <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12 ss-{{$loop->iteration}} ss">
                 <div class="feature feature--boxed-border feature--bg-2 active ss-package_bg mt-4 height">
                     <div class="icon-block--style-1-v5 text-center">
                         <div class="block-icon c-gray-dark">
                             <li style="list-style-type: none;">
-                                <img src="/images/package_{{$package->dataid}}.png" class="img-sm" height="100">
+                                @php
+                                    $imgPath = '/images/package_'.$package->dataid.'.png';
+                                    if (!file_exists(public_path($imgPath))) $imgPath = '/images/package_10.png';
+                                    $meta = method_exists($package, 'meta') ? $package->meta() : [];
+                                @endphp
+                                <img src="{{ $imgPath }}" class="img-sm" height="100">
                             </li>
                         </div>
-                        <!--<div class="block-content">-->
-                        <!--    <h3 class="col-black heading heading-5 strong-500"><strong>{{$package->name}}</strong></h3>-->
-                        <!--    <h3 class="price-tag col-black" style="font-size: 20px;">Registration: {{explode('|', $package->description)[0]}}</h3>-->
-                        <!--    <ul class="pl-0 pr-0 mt-0">-->
-                        <!--        <li class="package_items">Success Fee: <span class="c-base-1"><b>{{explode('|', $package->description)[1]}}</b></span> <span class="c-gray-light">after successful match</span></li>-->
-                        <!--        <li class="package_items"><span><b>{{explode('|', $package->description)[2]}}</b></span>@if (sizeof(explode('|', $package->description))==4) <span class="c-gray-light">{{explode('|', $package->description)[3]}}</span>@endif</li>-->
-                        <!--    </ul>-->
-                            
-                        <!--     @if( $package->name == "Diamond" || $package->name == "Royal" )-->
-                        <!--    <div class="special-image">-->
-                        <!--        <img src="/images/special_{{$package->name}}.png" alt="{{$package->name}} Special Image" class="img-fluid">-->
-                        <!--    </div>-->
-                        <!--    @endif-->
-                            
+                        {{--
+                            NOTE:
+                            Do NOT use HTML comments to "disable" Blade expressions.
+                            Blade still evaluates {{ ... }} inside <!-- ... --> which can crash the page.
 
-                           
+                            Old offline package markup removed from here.
+                        --}}
+                        <div class="block-content mt-3">
+                            <h3 class="col-black heading heading-5 strong-500 mb-2"><strong>{{ $package->name }}</strong></h3>
+                            @if(!empty($meta) && isset($meta['price']))
+                                <div class="price-tag col-black" style="font-size: 20px;">
+                                    {{ $meta['currency'] ?? 'USD' }} {{ number_format((float)$meta['price'], 2) }}
+                                    <span class="c-gray-light" style="font-size: 14px;">/ {{ $meta['duration_label'] ?? '' }}</span>
+                                </div>
+                            @endif
+                        </div>
 
-                        <!--</div>-->
-                         <div class="py-2 text-center mb-2">
+                        <div class="py-2 text-center mb-2">
                                 <a href="{{ url('package-details/'.$package->id) }}" class="btn btn-styled btn-sm btn-base-1 btn-outline btn-circle">
     View Package Details
 </a>
-
+                                @auth
+                                    <a href="{{ route('packages.checkout', ['id' => $package->id]) }}" class="btn btn-styled btn-sm btn-base-1 btn-circle mt-2">
+                                        Buy Now
+                                    </a>
+                                @else
+                                    <a href="{{ url('login') }}" class="btn btn-styled btn-sm btn-base-1 btn-circle mt-2">
+                                        Login to Buy
+                                    </a>
+                                @endauth
 
                             </div>
                     </div>
@@ -195,6 +220,44 @@
             @endif
             @endforeach
         </div>
+        @endif
+
+        @if(!$premiumPackages->isEmpty())
+        <div class="row justify-content-center mt-5">
+            <div class="col-12 text-center mb-3">
+                <h2 class="heading heading-3 strong-600 col-black">Premium Packages</h2>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            @foreach ($premiumPackages as $package)
+            @if($package->dataid!="99")
+            @php
+                $imgPath = '/images/package_'.$package->dataid.'.png';
+                if (!file_exists(public_path($imgPath))) $imgPath = '/images/package_10.png';
+            @endphp
+            <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12 ss-{{$loop->iteration}} ss">
+                <div class="feature feature--boxed-border feature--bg-2 active ss-package_bg mt-4 height">
+                    <div class="icon-block--style-1-v5 text-center">
+                        <div class="block-icon c-gray-dark">
+                            <li style="list-style-type: none;">
+                                <img src="{{ $imgPath }}" class="img-sm" height="100">
+                            </li>
+                        </div>
+                        <div class="block-content mt-3">
+                            <h3 class="col-black heading heading-5 strong-500 mb-2"><strong>{{ $package->name }}</strong></h3>
+                        </div>
+                        <div class="py-2 text-center mb-2">
+                            <a href="{{ url('package-details/'.$package->id) }}" class="btn btn-styled btn-sm btn-base-1 btn-outline btn-circle">
+                                View Package Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+            @endforeach
+        </div>
+        @endif
     </div>
 </section>
    
@@ -385,14 +448,15 @@ function closePopupOffline() {
   document.body.classList.remove("no-scroll");
 }
 </script>
-<script type="text/javascript">
-    @auth
-    @if(empty(User::retrieveUserObject()->package))
-    $(document).ready(function() {
-        swalAlert("info", "Select a Package", "Review packages available and contact Usman at 0304-0227000 for package activation.", null);
-    });
+
+@auth
+    @if(empty(User::retrieveUserObject()->online_package))
+        <script type="text/javascript">
+            $(document).ready(function() {
+                swalAlert("info", "Select a Package", "Review packages available and contact Usman at 0304-0227000 for package activation.", null);
+            });
+        </script>
     @endif
-    @endauth
-</script>
+@endauth
 
 @endsection

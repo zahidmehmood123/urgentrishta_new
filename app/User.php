@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Support\Carbon;
 //use App\Profile;
 
 class User extends Authenticatable implements MustVerifyEmail {
@@ -47,7 +48,13 @@ class User extends Authenticatable implements MustVerifyEmail {
         'marital_status',
         'education',
         'profession',
-        'password'
+        'password',
+        'package',
+        'package_started_at',
+        'package_expires_at',
+        'online_package',
+        'online_package_started_at',
+        'online_package_expires_at',
     ];
 
     /**
@@ -66,7 +73,11 @@ class User extends Authenticatable implements MustVerifyEmail {
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'age' => 'int'
+        'age' => 'int',
+        'package_started_at' => 'datetime',
+        'package_expires_at' => 'datetime',
+        'online_package_started_at' => 'datetime',
+        'online_package_expires_at' => 'datetime',
     ];
 
     protected $profileObj = null;
@@ -116,6 +127,80 @@ class User extends Authenticatable implements MustVerifyEmail {
 
     public function isAdmin() {
         return $this->profile()->isAdmin();
+    }
+
+    /**
+     * User can use paid online features if package is set and not expired.
+     */
+    public function hasActivePackage(): bool
+    {
+        if (empty($this->package)) {
+            return false;
+        }
+
+        if (empty($this->package_expires_at)) {
+            // If expiry isn't set yet, treat "package set" as active.
+            return true;
+        }
+
+        return $this->package_expires_at instanceof Carbon
+            ? $this->package_expires_at->isFuture()
+            : Carbon::parse($this->package_expires_at)->isFuture();
+    }
+
+    /**
+     * True only if the user has an active online package and it is not expired.
+     * Checks online_package column first; falls back to package column if it matches an online package (backward compatibility).
+     * Used to gate "Search Soul Mates". Admin-assigned package (package column, non-online dataid) does not grant access.
+     */
+    public function hasActiveOnlinePackage(): bool
+    {
+        $dataid = $this->online_package;
+        $expiresAt = $this->online_package_expires_at;
+
+        // Backward compatibility: if online_package is empty but package is set and is an online package, use that
+        if (empty($dataid) && !empty($this->package)) {
+            $isOnline = OnlinePackage::where('dataid', $this->package)->where('is_active', true)->exists();
+            if ($isOnline) {
+                $dataid = $this->package;
+                $expiresAt = $this->package_expires_at;
+            }
+        }
+
+        if (empty($dataid)) {
+            return false;
+        }
+
+        $isOnlinePackage = OnlinePackage::where('dataid', $dataid)->where('is_active', true)->exists();
+        if (!$isOnlinePackage) {
+            return false;
+        }
+
+        if (empty($expiresAt)) {
+            return true;
+        }
+
+        return $expiresAt instanceof Carbon
+            ? $expiresAt->isFuture()
+            : Carbon::parse($expiresAt)->isFuture();
+    }
+
+    /**
+     * Activate an ONLINE package (sets online_package columns only; does not change admin package).
+     */
+    public function activateOnlinePackage(OnlinePackage $package): void
+    {
+        $meta = $package->meta();
+        $durationDays = isset($meta['duration_days']) ? (int)$meta['duration_days'] : 30;
+        if ($durationDays <= 0) {
+            $durationDays = 30;
+        }
+
+        $now = Carbon::now();
+        $this->online_package = $package->dataid;
+        $this->online_package_started_at = $now;
+        $this->online_package_expires_at = $now->copy()->addDays($durationDays);
+        $this->save();
     }
 
     public function getProfileImage($tiny = null) {

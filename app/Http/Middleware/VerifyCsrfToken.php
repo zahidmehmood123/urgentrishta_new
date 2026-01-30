@@ -12,6 +12,12 @@ class VerifyCsrfToken extends Middleware
      * @var array
      */
     protected $except = [
-        'eiu','api/*','login'
+        'eiu',
+        'api/*',
+        'login',
+        // Stripe webhook lives under api routes (no CSRF there)
+        'api/stripe/webhook',
     ];
+
+    
 }

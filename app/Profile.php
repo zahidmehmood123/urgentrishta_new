@@ -272,7 +272,7 @@ class Profile extends Model {
 
             // Main query: Join only the limited users with masterdata
             $query = "select `u`.*, CONCAT(`u`.`first_name`,' ',`u`.`last_name`) AS `name`,
-                `mp`.`name` AS `lbl_package`,
+                COALESCE(`op`.`name`, `mp`.`name`) AS `lbl_package`,
                 `mms`.`name` AS `lbl_marital_status`,
                 `mr`.`name` AS `lbl_religion`,
                 `mmt`.`name` AS `lbl_mother_tongue`,
@@ -298,6 +298,7 @@ class Profile extends Model {
                 from (" . $subQuery . ") as `limited_users`
                 inner join `users` `u` on `limited_users`.`id` = `u`.`id`
                 left join `masterdata` `mp` on((`u`.`package` = `mp`.`dataid`) and (`mp`.`type` = 'PACKAGE'))
+                left join `online_packages` `op` on((`u`.`online_package` = `op`.`dataid`) and (`op`.`is_active` = 1))
                 left join `masterdata` `mms` on((`u`.`marital_status` = `mms`.`dataid`) and (`mms`.`type` = 'MARITAL_STATUS'))
                 left join `masterdata` `mr` on((`u`.`religion` = `mr`.`dataid`) and (`mr`.`type` = 'RELIGION'))
                 left join `masterdata` `mmt` on((`u`.`mother_tongue` = `mmt`.`dataid`) and (`mmt`.`type` = 'MOTHER_TONGUE'))
@@ -326,7 +327,7 @@ class Profile extends Model {
         } else {
             // Fallback to original query structure for complex WHERE clauses
             $query = "select `u`.*, CONCAT(`u`.`first_name`,' ',`u`.`last_name`) AS `name`,
-                `mp`.`name` AS `lbl_package`,
+                COALESCE(`op`.`name`, `mp`.`name`) AS `lbl_package`,
                 `mms`.`name` AS `lbl_marital_status`,
                 `mr`.`name` AS `lbl_religion`,
                 `mmt`.`name` AS `lbl_mother_tongue`,
@@ -351,6 +352,7 @@ class Profile extends Model {
                 group_concat(`i`.`img_url` separator ',') AS `images`
                 from `users` `u`
                 left join `masterdata` `mp` on((`u`.`package` = `mp`.`dataid`) and (`mp`.`type` = 'PACKAGE'))
+                left join `online_packages` `op` on((`u`.`online_package` = `op`.`dataid`) and (`op`.`is_active` = 1))
                 left join `masterdata` `mms` on((`u`.`marital_status` = `mms`.`dataid`) and (`mms`.`type` = 'MARITAL_STATUS'))
                 left join `masterdata` `mr` on((`u`.`religion` = `mr`.`dataid`) and (`mr`.`type` = 'RELIGION'))
                 left join `masterdata` `mmt` on((`u`.`mother_tongue` = `mmt`.`dataid`) and (`mmt`.`type` = 'MOTHER_TONGUE'))

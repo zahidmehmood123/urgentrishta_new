@@ -344,27 +344,58 @@ button.copy-button svg{
                     </div>
                     <div class="card-body">
                         @php
-                            $descriptionParts = explode('|', $package->description);
+                            $descriptionParts = explode('|', (string) $package->description);
+                            $meta = [];
+                            $decoded = json_decode((string) $package->description, true);
+                            if (is_array($decoded)) $meta = $decoded;
                         @endphp
                         <ul class="list-group list-group-flush">
-                            <li class="list-group-item">
-                                <strong>Registration Fee:</strong> {{ $descriptionParts[0] ?? 'N/A' }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Success Fee:</strong> {{ $descriptionParts[1] ?? 'N/A' }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Additional Benefits:</strong> 
-                                {{ $descriptionParts[2] ?? 'N/A' }}
-                                @if (isset($descriptionParts[3]))
-                                    <br><small>{{ $descriptionParts[3] }}</small>
-                                @endif
-                            </li>
+                            @if(!empty($meta) && isset($meta['price']))
+                                <li class="list-group-item">
+                                    <strong>Price:</strong> {{ $meta['currency'] ?? 'USD' }} {{ number_format((float)$meta['price'], 2) }}
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Duration:</strong> {{ $meta['duration_label'] ?? 'N/A' }}
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Access:</strong> Online services active until expiry.
+                                </li>
+                            @else
+                                <li class="list-group-item">
+                                    <strong>Registration Fee:</strong> {{ $descriptionParts[0] ?? 'N/A' }}
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Success Fee:</strong> {{ $descriptionParts[1] ?? 'N/A' }}
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Additional Benefits:</strong> 
+                                    {{ $descriptionParts[2] ?? 'N/A' }}
+                                    @if (isset($descriptionParts[3]))
+                                        <br><small>{{ $descriptionParts[3] }}</small>
+                                    @endif
+                                </li>
+                            @endif
                         </ul>
                         <div class="py-2 text-left mb-2">
-                            <button class="btn btn-styled btn-sm btn-base-1 btn-outline btn-circle" onclick="openBankDetails('{{ $package->name }}', '{{ explode('|', $package->description)[0] }}')">
-                                Subscibe Now
-                            </button>
+                            @if(!empty($meta) && isset($meta['price']))
+                                @auth
+                                    <a class="btn btn-styled btn-sm btn-base-1 btn-outline btn-circle" href="{{ route('packages.checkout', ['id' => $package->id]) }}">
+                                        Subscribe Now
+                                    </a>
+                                @else
+                                    <a class="btn btn-styled btn-sm btn-base-1 btn-outline btn-circle" href="{{ url('login') }}">
+                                        Login to Subscribe
+                                    </a>
+                                @endauth
+                            @else
+                                <button
+                                    class="btn btn-styled btn-sm btn-base-1 btn-outline btn-circle"
+                                    data-package-name="{{ $package->name }}"
+                                    data-package-price="{{ $descriptionParts[0] ?? '' }}"
+                                    onclick="openBankDetails(this.dataset.packageName, this.dataset.packagePrice)">
+                                    Subscibe Now
+                                </button>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -374,8 +405,12 @@ button.copy-button svg{
             <div class="col-md-4">
                 <!-- Package Image -->
                 <div class="card shadow-lg mb-3">
+                    @php
+                        $imgPath = '/images/package_'.$package->dataid.'.png';
+                        if (!file_exists(public_path($imgPath))) $imgPath = '/images/package_10.png';
+                    @endphp
                     <img 
-                        src="/images/package_{{ $package->dataid }}.png"
+                        src="{{ $imgPath }}"
                         sizes="(max-width: 768px) 100vw, 50vw" 
                         alt="{{ $package->name }}" 
                         class="card-img-top" 

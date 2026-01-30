@@ -36,11 +36,11 @@ return [
     'mailers' => [
         'smtp' => [
             'transport' => 'smtp',
-            'host' => env('MAIL_HOST', 'urgentrishta.co'),
+            'host' => env('MAIL_HOST', 'smtp.mailgun.org'),
             'port' => env('MAIL_PORT', 465),
-            'encryption' => env('MAIL_ENCRYPTION', 'tls'),
-            'username' => 'manager@urgentrishta.co',
-            'password' => 'amiabuUsman45@123',
+            'encryption' => env('MAIL_ENCRYPTION', 'ssl'),
+            'username' => env('MAIL_USERNAME'),
+            'password' => env('MAIL_PASSWORD'),
             'timeout' => null,
             'auth_mode' => null,
         ],
@@ -84,7 +84,7 @@ return [
     */
 
     'from' => [
-        'address' => 'manager@urgentrishta.co',
+        'address' => env('MAIL_FROM_ADDRESS', 'manager@urgentrishta.com'),
         'name' => env('MAIL_FROM_NAME', 'Urgent Rishta'),
     ],
 

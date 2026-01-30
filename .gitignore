@@ -1,43 +1,65 @@
-# Laravel / PHP
+# --- Laravel Core ---
 /vendor/
 /.env
 /.env.*
 !.env.example
 /.phpunit.cache/
-/storage/*.key
-/storage/framework/cache/
-/storage/framework/sessions/
-/storage/framework/views/
-/storage/logs/
-/storage/clockwork/
 /bootstrap/cache/*.php
+!bootstrap/cache/.gitkeep
 
-# Node / frontend
+# --- Storage Folder (The "Smart" Way) ---
+# We ignore the files inside, but keep the folders via .gitignore or .gitkeep
+/storage/*.key
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
+/storage/clockwork/*
+/storage/app/public/*
+/storage/app/*
+!storage/app/.gitignore
+!storage/app/public/.gitignore
+!storage/framework/cache/.gitignore
+!storage/framework/sessions/.gitignore
+!storage/framework/views/.gitignore
+!storage/logs/.gitignore
+
+# --- Frontend & Node ---
 /node_modules/
 /public/hot
 /public/storage
 /npm-debug.log
 /yarn-error.log
+/public/build/
 
-# Archives / binaries (prevents huge pushes)
+# --- User Generated Content ---
+# You had these in /public; it's better to store them in /storage and link them,
+# but if you must keep them in public, this ignores the contents:
+/public/users/*
+/public/couples/*
+!public/users/.gitkeep
+!public/couples/.gitkeep
+
+# --- Archives & Binaries ---
 *.zip
 *.7z
 *.rar
 *.tar
 *.gz
+*.iso
+*.log
 composer.phar
 
-# OS / editor
+# --- OS & IDEs ---
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# Local analysis outputs
+# --- Local Analysis ---
 allfiles.txt
-
-# User-generated uploads (should not be in git)
-/public/users/
-/public/couples/
-/storage/app/public/
-

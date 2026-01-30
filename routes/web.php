@@ -91,6 +91,15 @@ Route::get('member/profile/listing/{type}', [App\Http\Controllers\ProfileControl
 // Route::get('member', [App\Http\Controllers\ProfileController::class, 'memberView']);
 // non dynamic routes
 Route::get('packages', [App\Http\Controllers\HomeController::class, 'packagesView']);
+Route::get('packages/checkout/{id}', [App\Http\Controllers\PaymentController::class, 'startOnlinePackageCheckout'])
+    ->middleware(['auth', 'verified'])
+    ->name('packages.checkout');
+
+Route::get('payment/stripe/success/{reference}', [App\Http\Controllers\PaymentController::class, 'stripeSuccess'])
+    ->name('stripe.success');
+Route::get('payment/stripe/cancel/{reference}', [App\Http\Controllers\PaymentController::class, 'stripeCancel'])
+    ->name('stripe.cancel');
+// Stripe webhook is in api.php (no CSRF) - use POST /api/stripe/webhook
 Route::get('stories', [App\Http\Controllers\HomeController::class, 'storiesView']);
 Route::get('faqs', [App\Http\Controllers\HomeController::class, 'faqsView']);
 Route::get('tandc', [App\Http\Controllers\HomeController::class, 'termsAndConditionsView']);
@@ -114,8 +123,11 @@ Route::post('contact-us',[App\Http\Controllers\HomeController::class, 'contactUs
 // Add this route to your web.php
 
 Route::get('package-details/{id}', function ($id) {
-    // Assuming you fetch the package details from the database
-    $package = \App\MasterData::find($id);
+    // Fetch from online packages first, then fall back to masterdata
+    $package = \App\OnlinePackage::find($id);
+    if (!$package) {
+        $package = \App\MasterData::find($id);
+    }
 
     if (!$package) {
         abort(404, 'Package not found');
@@ -164,5 +176,28 @@ Route::get('clear-all', function () {
             'message' => $e->getMessage()
         ]);
     }
+});
+
+Route::get('/smtp-check', function () {
+    try {
+        Mail::raw('SMTP test email', function ($message) {
+            $message->to('zahid.mehmood.arhamsoft@gmail.com')
+                    ->subject('SMTP Test - UrgentRishta');
+        });
+
+        return '✅ SMTP is working. Email sent successfully.';
+    } catch (\Exception $e) {
+        return '❌ SMTP failed: ' . $e->getMessage();
+    }
+});
+
+Route::get('/mail-config-check', function () {
+    return [
+        'MAIL_HOST' => config('mail.mailers.smtp.host'),
+        'MAIL_PORT' => config('mail.mailers.smtp.port'),
+        'MAIL_USERNAME' => config('mail.mailers.smtp.username'),
+        'MAIL_ENCRYPTION' => config('mail.mailers.smtp.encryption'),
+        'MAIL_FROM' => config('mail.from.address'),
+    ];
 });
 

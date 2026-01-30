@@ -27,3 +27,6 @@ Route::post('emailCheck', [App\Http\Controllers\API\APIController::class, 'email
 Route::post('registerUser', [App\Http\Controllers\API\APIController::class, 'registerUser']);
 Route::post('updateUserProfile', [App\Http\Controllers\API\APIController::class, 'updateUserProfile']);
 
+// Stripe webhook (no CSRF in api middleware) - forward to: http://127.0.0.1:8000/api/stripe/webhook
+Route::post('stripe/webhook', [App\Http\Controllers\PaymentController::class, 'stripeWebhook'])->name('stripe.webhook');
+

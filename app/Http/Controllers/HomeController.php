@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Http\Request;
 use App\Mail\ContactUsEmail;
 use App\MasterData;
+use App\OnlinePackage;
 use App\Profile;
 use App\User;
 
@@ -20,7 +21,7 @@ class HomeController extends Controller {
      * @return void
      */
     public function __construct() {
-        $this->middleware(['auth', 'verified'])->except(['index', 'search', 'contactUsEmail',
+        $this->middleware(['auth', 'verified'])->except(['index', 'contactUsEmail',
             'packagesView','storiesView', 'faqsView', 'termsAndConditionsView', 'privacyPolicyView',
             'contactUsView', 'states', 'cities']);
     }
@@ -41,8 +42,14 @@ class HomeController extends Controller {
     }
 
     public function packagesView() {
-        $packages = MasterData::where('type', 'PACKAGE')->get();
-        return view('packages', compact("packages"));
+        // Standard (ONLINE) packages: stored in separate table and paid online
+        $standardPackages = OnlinePackage::where('is_active', true)->get();
+
+        // Premium/offline packages: existing data kept in masterdata
+        $premiumPackages = MasterData::where('type', 'PACKAGE')->get();
+
+        $packages = $standardPackages->concat($premiumPackages);
+        return view('packages', compact("packages", "standardPackages", "premiumPackages"));
     }
 
     public function storiesView() {
@@ -66,12 +73,17 @@ class HomeController extends Controller {
     }
 
     public Function search(Request $request, $refresh = null) {
-        $loggedInUser = User::retrieveUserObject();
+        // Force refresh from DB so package/online_package and expiry are up to date
+        $loggedInUser = User::retrieveUserObject(null, true);
         // dd($loggedInUser);
         if (!empty($loggedInUser) && !$loggedInUser->isActive()) {
             Session::flash('message', 'danger|Profile not active. Search disabled. Please contact Nimrah at 0307-0227000 for profle activation.');
             Log::info("Search disabled. User profile not activated for " . $loggedInUser->email);
             return redirect('home');
+        }
+        if (!empty($loggedInUser) && !$loggedInUser->hasActiveOnlinePackage()) {
+            Session::flash('message', 'warning|Please buy one of the online packages to search Soul Mates.');
+            return redirect('packages');
         }
 
         $pageSize = !empty($request->pagesize) ? $request->pagesize : 10;
@@ -82,8 +94,7 @@ class HomeController extends Controller {
         $where = "`u`.`gender`='".$request->gender."'";
         $having = "";
         
-        if (!empty($loggedInUser))
-            $where = $where.((empty($where) ? "" : " and ")."`u`.`package`<=".(!empty($loggedInUser->package)?$loggedInUser->package:1));
+        // NOTE: legacy package-based filtering removed for online subscriptions.
         if (!empty($request->member_id)) { // if dataid only search on dataid
             $where = $where.((empty($where) ? "" : " and ")."`u`.`dataid`='".$request->member_id."'");
         } else {

@@ -365,6 +365,22 @@ class APIController extends Controller {
     }
 
     public function searchProfiles(Request $request) {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'error-type' => 'unauthorized',
+                'error' => 'You must be logged in to search Soul Mates.'
+            ], 401);
+        }
+        if (!$user->hasActiveOnlinePackage()) {
+            return response()->json([
+                'status' => 'error',
+                'error-type' => 'package_required',
+                'error' => 'Please buy one of the online packages to search Soul Mates.'
+            ], 403);
+        }
+
         $data = json_decode($request->getContent());
         if (empty($data)) {
             return response()->json([
