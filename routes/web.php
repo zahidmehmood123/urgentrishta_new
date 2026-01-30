@@ -178,26 +178,3 @@ Route::get('clear-all', function () {
     }
 });
 
-Route::get('/smtp-check', function () {
-    try {
-        Mail::raw('SMTP test email', function ($message) {
-            $message->to('zahid.mehmood.arhamsoft@gmail.com')
-                    ->subject('SMTP Test - UrgentRishta');
-        });
-
-        return '✅ SMTP is working. Email sent successfully.';
-    } catch (\Exception $e) {
-        return '❌ SMTP failed: ' . $e->getMessage();
-    }
-});
-
-Route::get('/mail-config-check', function () {
-    return [
-        'MAIL_HOST' => config('mail.mailers.smtp.host'),
-        'MAIL_PORT' => config('mail.mailers.smtp.port'),
-        'MAIL_USERNAME' => config('mail.mailers.smtp.username'),
-        'MAIL_ENCRYPTION' => config('mail.mailers.smtp.encryption'),
-        'MAIL_FROM' => config('mail.from.address'),
-    ];
-});
-
