@@ -373,7 +373,14 @@ class APIController extends Controller {
                 'error' => 'You must be logged in to search Soul Mates.'
             ], 401);
         }
-        if (!$user->hasActiveOnlinePackage()) {
+        if (!$user->canSearchSoulMates()) {
+            if (!$user->hasActivePackage()) {
+                return response()->json([
+                    'status' => 'error',
+                    'error-type' => 'admin_package_required',
+                    'error' => 'You need an admin-assigned package (e.g. Platinum, Diamond, Royal) to search Soul Mates. Please contact the admin.'
+                ], 403);
+            }
             return response()->json([
                 'status' => 'error',
                 'error-type' => 'package_required',
@@ -407,10 +414,18 @@ class APIController extends Controller {
         $where = "`u`.`gender`='".$gender."'";
         $having = "";
 
-        $package = property_exists($data, "package") ? $data->package : 1;
-        $member_id = property_exists($data, "member_id") ? $data->member_id : "";
+        // Restrict results to users in same or lower admin package tier (server-side; do not use client package).
+        $visiblePackageDataids = $user->getVisiblePackageDataidsForSearch();
+        if (empty($visiblePackageDataids)) {
+            $where = $where . " and 1=0";
+        } else {
+            $quoted = array_map(function ($d) {
+                return "'" . addslashes($d) . "'";
+            }, $visiblePackageDataids);
+            $where = $where . " and `u`.`package` IN (" . implode(',', $quoted) . ")";
+        }
 
-        $where = $where.((empty($where) ? "" : " and ")."`u`.`package`<=".$package);
+        $member_id = property_exists($data, "member_id") ? $data->member_id : "";
         if (!empty($member_id)) { // if dataid only search on dataid
             $where = $where.((empty($where) ? "" : " and ")."`u`.`dataid`='".$request->member_id."'");
         } else {

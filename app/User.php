@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
+use App\MasterData;
 //use App\Profile;
 
 class User extends Authenticatable implements MustVerifyEmail {
@@ -130,7 +131,8 @@ class User extends Authenticatable implements MustVerifyEmail {
     }
 
     /**
-     * User can use paid online features if package is set and not expired.
+     * User has an active admin-assigned package (e.g. Platinum, Diamond, Royal, Sovereign Matchmaking).
+     * Package must exist in masterdata type PACKAGE and not be expired.
      */
     public function hasActivePackage(): bool
     {
@@ -138,8 +140,12 @@ class User extends Authenticatable implements MustVerifyEmail {
             return false;
         }
 
+        $isAdminPackage = MasterData::where('type', 'PACKAGE')->where('dataid', $this->package)->exists();
+        if (!$isAdminPackage) {
+            return false;
+        }
+
         if (empty($this->package_expires_at)) {
-            // If expiry isn't set yet, treat "package set" as active.
             return true;
         }
 
@@ -183,6 +189,35 @@ class User extends Authenticatable implements MustVerifyEmail {
         return $expiresAt instanceof Carbon
             ? $expiresAt->isFuture()
             : Carbon::parse($expiresAt)->isFuture();
+    }
+
+    /**
+     * Search Soul Mates is allowed only when BOTH are true:
+     * - User has an admin-assigned package (e.g. Platinum, Diamond, Royal, Sovereign Matchmaking) and it is active.
+     * - User has an active (subscribed and not expired) online package (days-based access).
+     */
+    public function canSearchSoulMates(): bool
+    {
+        return $this->hasActivePackage() && $this->hasActiveOnlinePackage();
+    }
+
+    /**
+     * Returns package dataids that this user (as searcher) is allowed to see.
+     * Higher admin package tier can see same + lower tiers; lower cannot see higher.
+     * Admin packages are ordered by masterdata id (asc = lowest to highest tier).
+     * Returns empty array if user has no admin package.
+     */
+    public function getVisiblePackageDataidsForSearch(): array
+    {
+        if (empty($this->package)) {
+            return [];
+        }
+        $packages = MasterData::where('type', 'PACKAGE')->orderBy('id')->get();
+        $searcherPackage = $packages->firstWhere('dataid', $this->package);
+        if (!$searcherPackage) {
+            return [];
+        }
+        return $packages->where('id', '<=', $searcherPackage->id)->pluck('dataid')->values()->all();
     }
 
     /**

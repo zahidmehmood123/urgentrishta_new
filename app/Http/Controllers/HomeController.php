@@ -81,7 +81,12 @@ class HomeController extends Controller {
             Log::info("Search disabled. User profile not activated for " . $loggedInUser->email);
             return redirect('home');
         }
-        if (!empty($loggedInUser) && !$loggedInUser->hasActiveOnlinePackage()) {
+        // Search requires BOTH admin-assigned package AND active online package (days-based).
+        if (!empty($loggedInUser) && !$loggedInUser->canSearchSoulMates()) {
+            if (!$loggedInUser->hasActivePackage()) {
+                Session::flash('message', 'warning|You need an admin-assigned package (e.g. Platinum, Diamond, Royal, Sovereign Matchmaking) to search Soul Mates. Please contact the admin.');
+                return redirect('home');
+            }
             Session::flash('message', 'warning|Please buy one of the online packages to search Soul Mates.');
             return redirect('packages');
         }
@@ -93,8 +98,18 @@ class HomeController extends Controller {
 
         $where = "`u`.`gender`='".$request->gender."'";
         $having = "";
-        
-        // NOTE: legacy package-based filtering removed for online subscriptions.
+
+        // Restrict results to users in same or lower admin package tier (higher package can see lower).
+        $visiblePackageDataids = $loggedInUser->getVisiblePackageDataidsForSearch();
+        if (empty($visiblePackageDataids)) {
+            $where = $where . " and 1=0";
+        } else {
+            $quoted = array_map(function ($d) {
+                return "'" . addslashes($d) . "'";
+            }, $visiblePackageDataids);
+            $where = $where . " and `u`.`package` IN (" . implode(',', $quoted) . ")";
+        }
+
         if (!empty($request->member_id)) { // if dataid only search on dataid
             $where = $where.((empty($where) ? "" : " and ")."`u`.`dataid`='".$request->member_id."'");
         } else {
