@@ -222,9 +222,15 @@ class User extends Authenticatable implements MustVerifyEmail {
 
     /**
      * Activate an ONLINE package (sets online_package columns only; does not change admin package).
+     * If the user already has an active (non-expired) online subscription, does nothing:
+     * they must wait until expiry before subscribing again.
      */
     public function activateOnlinePackage(OnlinePackage $package): void
     {
+        if ($this->hasActiveOnlinePackage()) {
+            return;
+        }
+
         $meta = $package->meta();
         $durationDays = isset($meta['duration_days']) ? (int)$meta['duration_days'] : 30;
         if ($durationDays <= 0) {

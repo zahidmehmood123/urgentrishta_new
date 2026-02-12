@@ -379,9 +379,13 @@ button.copy-button svg{
                         <div class="py-2 text-left mb-2">
                             @if(!empty($meta) && isset($meta['price']))
                                 @auth
-                                    <a class="btn btn-styled btn-sm btn-base-1 btn-outline btn-circle" href="{{ route('packages.checkout', ['id' => $package->id]) }}">
-                                        Subscribe Now
-                                    </a>
+                                    @if($userHasActiveOnlinePackage ?? false)
+                                        <p class="text-muted mb-0" style="font-size: 14px;">You have an active subscription. Subscribe again after {{ $userOnlineExpiresAtFormatted ?? '' }}.</p>
+                                    @else
+                                        <a class="btn btn-styled btn-sm btn-base-1 btn-outline btn-circle" href="{{ route('packages.checkout', ['id' => $package->id]) }}">
+                                            Subscribe Now
+                                        </a>
+                                    @endif
                                 @else
                                     <a class="btn btn-styled btn-sm btn-base-1 btn-outline btn-circle" href="{{ url('login') }}">
                                         Login to Subscribe

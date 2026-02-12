@@ -105,7 +105,113 @@
     border-radius: 7px;
 
     }
+    .ss-package_bg.ss-online {
+    min-height: 427px;
+    margin-bottom: 20px;
+}
+
+
     .special-image { position: absolute; width: 66px; height: auto; top: -20px; right: -20px; }
+
+    /* Separate sections: Online vs Admin packages */
+    .package-section-online {
+        margin-bottom: 3rem;
+        padding-bottom: 2.5rem;
+        /* border-bottom: 2px solid rgba(233, 30, 99, 0.2); */
+    }
+    .package-section-admin {
+        padding-top: 0.5rem;
+    }
+    .package-section-title {
+        margin-bottom: 0.5rem;
+    }
+    .package-section-desc {
+        font-size: 15px;
+        color: #6c757d;
+        max-width: 640px;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 1.5rem;
+    }
+    .ss-package_bg.ss-online {
+        border-color: rgb(33, 150, 243);
+        background: linear-gradient(to bottom, #fff 0%, #f8fbff 100%);
+    }
+    .ss-package_bg.ss-admin {
+        border-color: rgb(253, 37, 109);
+        background: linear-gradient(to bottom, #fff 0%, #fff8fb 100%);
+    }
+
+    .package-active-badge {
+        display: inline-block;
+        background: #2196F3;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 20px;
+        margin-bottom: 6px;
+    }
+    .package-expiry-text {
+        font-size: 13px;
+        color: #2e7d32;
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+
+    /* Package tabs */
+    .package-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 0;
+        margin-bottom: 2rem;
+        /* border-bottom: 2px solid #e0e0e0; */
+        flex-wrap: wrap;
+    }
+    .package-tabs .tab-btn {
+        padding: 12px 24px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #666;
+        background: transparent;
+        border: none;
+        border: 3px solid #E91E63;
+        margin-bottom: -2px;
+        outline: none;
+        cursor: pointer;
+        transition: color 0.2s, border-color 0.2s;
+
+    }
+
+    
+     
+    .package-tabs .tab-btn.active,
+    .package-tabs .tab-btn:hover {
+        color: #ffffff;
+        border: 3px solid #E91E63;
+        background: #E91E63;
+    }
+    .package-tab-panel {
+        display: none;
+    }
+    .package-tab-panel.active {
+        display: block;
+    }
+
+
+
+    .ss-package_bg 
+        { 
+            display: flex; 
+            justify-content: center;
+        }
+
+        .icon-block--style-1-v5 {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
 
     @keyframes zoomout {
         0% {
@@ -134,7 +240,19 @@
             margin-top: 75px;
         }
     }
+    @media (max-width: 767px) {
+        .package-tabs .tab-btn {
+            padding: 12px 24px;
+            font-size: 13px;
+            width: 100%;
+        }
+    }
 
+
+
+
+
+     
 </style>
 
 
@@ -153,24 +271,36 @@
 @php
     $standardPackages = $standardPackages ?? collect();
     $premiumPackages = $premiumPackages ?? collect();
+    $userOnlinePackageDataid = $userOnlinePackageDataid ?? null;
+    $userOnlineExpiresAtFormatted = $userOnlineExpiresAtFormatted ?? null;
+    $userHasActiveOnlinePackage = $userHasActiveOnlinePackage ?? false;
     if ($standardPackages->isEmpty() && $premiumPackages->isEmpty()) {
         $standardPackages = collect($packages ?? []);
     }
 @endphp
 <section class="slice sct-color-1 pricing-plans pricing-plans--style-1 has-bg-cover bg-size-cover" style=" background-position: bottom bottom;">
-    <div class="container ss-container">
+    <div class="container ss-container mt-5">
         <span class="clearfix"></span>
-        @if(!$standardPackages->isEmpty())
+
+        <div class="package-tabs" role="tablist">
+            <button type="button" class="tab-btn active" data-tab="online" role="tab" aria-selected="true">Online Packages</button>
+            <button type="button" class="tab-btn" data-tab="premium" role="tab" aria-selected="false">Premium / Admin-Assigned Packages</button>
+        </div>
+
+        <div id="tab-online" class="package-tab-panel active" role="tabpanel">
+        <div class="package-section-online">
         <div class="row justify-content-center">
             <div class="col-12 text-center mb-3">
-                <h2 class="heading heading-3 strong-600 col-black">Standard Packages (Online Payment)</h2>
+                <h2 class="heading heading-3 strong-600 col-black package-section-title">Online Packages</h2>
+                <p class="package-section-desc">Pay online and get search access for a set duration. Choose how long you want to search Soul Mates (weekly, 1 month, 3 months, or 6 months).</p>
             </div>
         </div>
+        @if(!$standardPackages->isEmpty())
         <div class="row justify-content-center">
             @foreach ($standardPackages as $package)
             @if($package->dataid!="99")
-            <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12 ss-{{$loop->iteration}} ss">
-                <div class="feature feature--boxed-border feature--bg-2 active ss-package_bg mt-4 height">
+            <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12 ss-{{$loop->iteration}} ss mt-2">
+                <div class="feature feature--boxed-border feature--bg-2 active ss-package_bg ss-online height">
                     <div class="icon-block--style-1-v5 text-center">
                         <div class="block-icon c-gray-dark">
                             <li style="list-style-type: none;">
@@ -190,6 +320,10 @@
                             Old offline package markup removed from here.
                         --}}
                         <div class="block-content mt-3">
+                            @if($userHasActiveOnlinePackage && $userOnlinePackageDataid === $package->dataid)
+                            <div class="package-active-badge">Current plan</div>
+                            <div class="package-expiry-text">Expires: {{ $userOnlineExpiresAtFormatted }}</div>
+                            @endif
                             <h3 class="col-black heading heading-5 strong-500 mb-2"><strong>{{ $package->name }}</strong></h3>
                             @if(!empty($meta) && isset($meta['price']))
                                 <div class="price-tag col-black" style="font-size: 20px;">
@@ -204,9 +338,13 @@
     View Package Details
 </a>
                                 @auth
-                                    <a href="{{ route('packages.checkout', ['id' => $package->id]) }}" class="btn btn-styled btn-sm btn-base-1 btn-circle mt-2">
-                                        Buy Now
-                                    </a>
+                                    @if($userHasActiveOnlinePackage)
+                                        <p class="package-expiry-text mt-2 mb-0">Subscribe again after {{ $userOnlineExpiresAtFormatted }}</p>
+                                    @else
+                                        <a href="{{ route('packages.checkout', ['id' => $package->id]) }}" class="btn btn-styled btn-sm btn-base-1 btn-circle mt-2">
+                                            Buy Now
+                                        </a>
+                                    @endif
                                 @else
                                     <a href="{{ url('login') }}" class="btn btn-styled btn-sm btn-base-1 btn-circle mt-2">
                                         Login to Buy
@@ -220,14 +358,23 @@
             @endif
             @endforeach
         </div>
+        @else
+        <p class="text-center text-muted py-4">No online packages available at the moment.</p>
         @endif
+        </div>
+        </div>
+        </div>
 
-        @if(!$premiumPackages->isEmpty())
-        <div class="row justify-content-center mt-5">
+        <div id="tab-premium" class="package-tab-panel" role="tabpanel">
+        <div class="package-section-admin">
+        <div class="row justify-content-center">
             <div class="col-12 text-center mb-3">
-                <h2 class="heading heading-3 strong-600 col-black">Premium Packages</h2>
+                <h2 class="heading heading-3 strong-600 col-black package-section-title">Premium / Admin-Assigned Packages</h2>
+                <p class="package-section-desc">Assigned by admin (e.g. Platinum, Diamond, Royal, Sovereign Matchmaking). These define which Soul Mate categories you can search. Contact admin to get a package assigned.</p>
             </div>
         </div>
+        @if(!$premiumPackages->isEmpty())
+        <div class="container ss-container mt-2 ">
         <div class="row justify-content-center">
             @foreach ($premiumPackages as $package)
             @if($package->dataid!="99")
@@ -235,8 +382,8 @@
                 $imgPath = '/images/package_'.$package->dataid.'.png';
                 if (!file_exists(public_path($imgPath))) $imgPath = '/images/package_10.png';
             @endphp
-            <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12 ss-{{$loop->iteration}} ss">
-                <div class="feature feature--boxed-border feature--bg-2 active ss-package_bg mt-4 height">
+            <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12 ss-{{$loop->iteration}} ss mt-2">
+                <div class="feature feature--boxed-border feature--bg-2 active ss-package_bg ss-admin  height">
                     <div class="icon-block--style-1-v5 text-center">
                         <div class="block-icon c-gray-dark">
                             <li style="list-style-type: none;">
@@ -257,9 +404,33 @@
             @endif
             @endforeach
         </div>
+        @else
+        <p class="text-center text-muted py-4">No premium packages available at the moment.</p>
         @endif
+        </div>
+        </div>
+        </div>
+        </div>
     </div>
 </section>
+
+<script>
+(function() {
+    var tabBtns = document.querySelectorAll('.package-tabs .tab-btn');
+    var panels = document.querySelectorAll('.package-tab-panel');
+    tabBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var tab = this.getAttribute('data-tab');
+            tabBtns.forEach(function(b) { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+            panels.forEach(function(p) { p.classList.remove('active'); });
+            this.classList.add('active');
+            this.setAttribute('aria-selected', 'true');
+            var panel = document.getElementById('tab-' + tab);
+            if (panel) panel.classList.add('active');
+        });
+    });
+})();
+</script>
    
      <div class="home-tit" style="background: black; margin-bottom:0;">
                         <p></p>

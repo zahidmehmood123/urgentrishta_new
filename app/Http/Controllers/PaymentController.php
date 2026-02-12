@@ -23,11 +23,20 @@ class PaymentController extends Controller
 
     /**
      * Start checkout for an online package (Stripe Checkout).
+     * User cannot subscribe to another online package until the current one expires.
      */
     public function startOnlinePackageCheckout($packageId)
     {
         /** @var User $user */
         $user = User::retrieveUserObject();
+
+        if ($user->hasActiveOnlinePackage()) {
+            $exp = $user->online_package_expires_at;
+            $expFormatted = $exp ? (\Illuminate\Support\Carbon::parse($exp)->format('j M Y')) : '';
+            Session::flash('message', 'warning|You already have an active online subscription.'
+                . ($expFormatted ? ' It is valid until ' . $expFormatted . '. You can subscribe again after it expires.' : ' You can subscribe again after it expires.'));
+            return redirect('packages');
+        }
 
         $package = OnlinePackage::where('is_active', true)->findOrFail($packageId);
         $meta = $package->meta();

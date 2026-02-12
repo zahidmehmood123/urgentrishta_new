@@ -122,19 +122,7 @@ Route::post('contact-us',[App\Http\Controllers\HomeController::class, 'contactUs
 // });
 // Add this route to your web.php
 
-Route::get('package-details/{id}', function ($id) {
-    // Fetch from online packages first, then fall back to masterdata
-    $package = \App\OnlinePackage::find($id);
-    if (!$package) {
-        $package = \App\MasterData::find($id);
-    }
-
-    if (!$package) {
-        abort(404, 'Package not found');
-    }
-
-    return view('package-details', compact('package'));
-});
+Route::get('package-details/{id}', [App\Http\Controllers\PackageController::class, 'showPackageDetails']);
 
 
 

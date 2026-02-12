@@ -12,6 +12,8 @@ use App\MasterData;
 use App\OnlinePackage;
 use App\Profile;
 use App\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Carbon;
 
 
 class HomeController extends Controller {
@@ -49,7 +51,27 @@ class HomeController extends Controller {
         $premiumPackages = MasterData::where('type', 'PACKAGE')->get();
 
         $packages = $standardPackages->concat($premiumPackages);
-        return view('packages', compact("packages", "standardPackages", "premiumPackages"));
+
+        // Current user's active online subscription (for showing "Active" and expiry on packages page)
+        $userOnlinePackageDataid = null;
+        $userOnlineExpiresAtFormatted = null;
+        $userHasActiveOnlinePackage = false;
+        if (Auth::check()) {
+            $user = Auth::user();
+            if ($user->hasActiveOnlinePackage()) {
+                $userHasActiveOnlinePackage = true;
+                $userOnlinePackageDataid = $user->online_package;
+                $exp = $user->online_package_expires_at;
+                $userOnlineExpiresAtFormatted = $exp instanceof Carbon
+                    ? $exp->format('j M Y')
+                    : ($exp ? Carbon::parse($exp)->format('j M Y') : null);
+            }
+        }
+
+        return view('packages', compact(
+            'packages', 'standardPackages', 'premiumPackages',
+            'userOnlinePackageDataid', 'userOnlineExpiresAtFormatted', 'userHasActiveOnlinePackage'
+        ));
     }
 
     public function storiesView() {
