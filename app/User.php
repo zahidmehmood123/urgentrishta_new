@@ -192,27 +192,33 @@ class User extends Authenticatable implements MustVerifyEmail {
     }
 
     /**
-     * Search Soul Mates is allowed only when BOTH are true:
-     * - User has an admin-assigned package (e.g. Platinum, Diamond, Royal, Sovereign Matchmaking) and it is active.
+     * Search Soul Mates is allowed when EITHER is true (online and admin packages are independent):
+     * - User has an admin-assigned package (e.g. Platinum, Diamond, Royal, Sovereign Matchmaking) and it is active, OR
      * - User has an active (subscribed and not expired) online package (days-based access).
      */
     public function canSearchSoulMates(): bool
     {
-        return $this->hasActivePackage() && $this->hasActiveOnlinePackage();
+        return $this->hasActivePackage() || $this->hasActiveOnlinePackage();
     }
 
     /**
      * Returns package dataids that this user (as searcher) is allowed to see.
-     * Higher admin package tier can see same + lower tiers; lower cannot see higher.
-     * Admin packages are ordered by masterdata id (asc = lowest to highest tier).
-     * Returns empty array if user has no admin package.
+     * - If user has admin package: higher tier can see same + lower tiers; lower cannot see higher.
+     * - If user has no admin package but has active online package: can see all package tiers.
+     * - If user has neither: returns empty (no search access).
      */
     public function getVisiblePackageDataidsForSearch(): array
     {
-        if (empty($this->package)) {
+        $packages = MasterData::where('type', 'PACKAGE')->orderBy('id')->get();
+        if ($packages->isEmpty()) {
             return [];
         }
-        $packages = MasterData::where('type', 'PACKAGE')->orderBy('id')->get();
+        // No admin package: if they have active online package, allow seeing all tiers; otherwise none.
+        if (empty($this->package)) {
+            return $this->hasActiveOnlinePackage()
+                ? $packages->pluck('dataid')->values()->all()
+                : [];
+        }
         $searcherPackage = $packages->firstWhere('dataid', $this->package);
         if (!$searcherPackage) {
             return [];

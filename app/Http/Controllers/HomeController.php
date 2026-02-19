@@ -103,14 +103,10 @@ class HomeController extends Controller {
             Log::info("Search disabled. User profile not activated for " . $loggedInUser->email);
             return redirect('home');
         }
-        // Search requires BOTH admin-assigned package AND active online package (days-based).
+        // Search allowed when EITHER admin-assigned package OR active online package (independent).
         if (!empty($loggedInUser) && !$loggedInUser->canSearchSoulMates()) {
-            if (!$loggedInUser->hasActivePackage()) {
-                Session::flash('message', 'warning|You need an admin-assigned package (e.g. Platinum, Diamond, Royal, Sovereign Matchmaking) to search Soul Mates. Please contact the admin.');
-                return redirect('home');
-            }
-            Session::flash('message', 'warning|Please buy one of the online packages to search Soul Mates.');
-            return redirect('packages');
+            Session::flash('message', 'warning|To search Soul Mates you need either an admin-assigned package (e.g. Platinum, Diamond, Royal—contact admin) or an active online package (see Packages page).');
+            return redirect('home');
         }
 
         $pageSize = !empty($request->pagesize) ? $request->pagesize : 10;

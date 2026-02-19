@@ -374,17 +374,10 @@ class APIController extends Controller {
             ], 401);
         }
         if (!$user->canSearchSoulMates()) {
-            if (!$user->hasActivePackage()) {
-                return response()->json([
-                    'status' => 'error',
-                    'error-type' => 'admin_package_required',
-                    'error' => 'You need an admin-assigned package (e.g. Platinum, Diamond, Royal) to search Soul Mates. Please contact the admin.'
-                ], 403);
-            }
             return response()->json([
                 'status' => 'error',
                 'error-type' => 'package_required',
-                'error' => 'Please buy one of the online packages to search Soul Mates.'
+                'error' => 'To search Soul Mates you need either an admin-assigned package (e.g. Platinum, Diamond, Royal—contact admin) or an active online package (see Packages page).'
             ], 403);
         }
 
