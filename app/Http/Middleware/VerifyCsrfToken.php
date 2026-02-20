@@ -15,8 +15,6 @@ class VerifyCsrfToken extends Middleware
         'eiu',
         'api/*',
         'login',
-        // Stripe webhook lives under api routes (no CSRF there)
-        'api/stripe/webhook',
     ];
 
     

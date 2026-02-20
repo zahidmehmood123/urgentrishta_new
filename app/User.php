@@ -155,23 +155,13 @@ class User extends Authenticatable implements MustVerifyEmail {
     }
 
     /**
-     * True only if the user has an active online package and it is not expired.
-     * Checks online_package column first; falls back to package column if it matches an online package (backward compatibility).
-     * Used to gate "Search Soul Mates". Admin-assigned package (package column, non-online dataid) does not grant access.
+     * True only if the user has an active online package (pay-per-period) and it is not expired.
+     * Uses only online_package, online_package_expires_at (no fallback to admin package column).
      */
     public function hasActiveOnlinePackage(): bool
     {
         $dataid = $this->online_package;
         $expiresAt = $this->online_package_expires_at;
-
-        // Backward compatibility: if online_package is empty but package is set and is an online package, use that
-        if (empty($dataid) && !empty($this->package)) {
-            $isOnline = OnlinePackage::where('dataid', $this->package)->where('is_active', true)->exists();
-            if ($isOnline) {
-                $dataid = $this->package;
-                $expiresAt = $this->package_expires_at;
-            }
-        }
 
         if (empty($dataid)) {
             return false;

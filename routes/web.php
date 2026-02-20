@@ -95,11 +95,10 @@ Route::get('packages/checkout/{id}', [App\Http\Controllers\PaymentController::cl
     ->middleware(['auth', 'verified'])
     ->name('packages.checkout');
 
-Route::get('payment/stripe/success/{reference}', [App\Http\Controllers\PaymentController::class, 'stripeSuccess'])
-    ->name('stripe.success');
-Route::get('payment/stripe/cancel/{reference}', [App\Http\Controllers\PaymentController::class, 'stripeCancel'])
-    ->name('stripe.cancel');
-// Stripe webhook is in api.php (no CSRF) - use POST /api/stripe/webhook
+Route::get('payment/paypal/success/{reference}', [App\Http\Controllers\PaymentController::class, 'paypalSuccess'])
+    ->name('paypal.success');
+Route::get('payment/paypal/cancel/{reference}', [App\Http\Controllers\PaymentController::class, 'paypalCancel'])
+    ->name('paypal.cancel');
 Route::get('stories', [App\Http\Controllers\HomeController::class, 'storiesView']);
 Route::get('faqs', [App\Http\Controllers\HomeController::class, 'faqsView']);
 Route::get('tandc', [App\Http\Controllers\HomeController::class, 'termsAndConditionsView']);
