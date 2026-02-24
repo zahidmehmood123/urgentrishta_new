@@ -9,6 +9,7 @@ use App\MasterData;
 use App\Images;
 use App\Interest;
 use App\Filtered;
+use App\OnlinePackage;
 use Illuminate\Mail\Message;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -253,6 +254,178 @@ class AdminController extends Controller
         } else return [
             'code' => '200'
         ];
+    }
+
+    /**
+     * List users who have any package: admin-assigned (offline) or online subscription.
+     * Admin only. Filters: search (name/email/dataid), package type (all / admin_only / online_only), specific package.
+     */
+    public function packageSubscribers()
+    {
+        $pageSize = 10;
+        $adminPackages = MasterData::where('type', 'PACKAGE')->orderBy('id')->get();
+        $onlinePackages = OnlinePackage::where('is_active', true)->orderBy('id')->get();
+        $subscribers = $this->queryPackageSubscribers(null, null, 1, $pageSize);
+        $total = $this->queryPackageSubscribersCount(null, null);
+        $view = view('admin.dashboard.package-subscribers')->with([
+            'currentPage' => 1,
+            'pageSize' => $pageSize,
+            'total' => $total,
+            'numPages' => (int)max(1, ceil($total / $pageSize)),
+            'subscribers' => $subscribers,
+            'adminPackages' => $adminPackages,
+            'onlinePackages' => $onlinePackages,
+        ]);
+        if (request()->ajax()) {
+            return ['code' => '200', 'html' => $view->renderSections()['admin-content']];
+        }
+        return $view;
+    }
+
+    /**
+     * AJAX refresh for package subscribers list (filters + pagination).
+     */
+    public function refreshPackageSubscribers(Request $request)
+    {
+        if (!$request->ajax()) {
+            return ['code' => '400'];
+        }
+        $pageSize = (int)($request->pagesize ?? 10);
+        $pageRequested = (int)($request->pagerequested ?? 1);
+        $pageSize = $pageSize < 1 ? 10 : min($pageSize, 100);
+        $subscribers = $this->queryPackageSubscribers($request, null, $pageRequested, $pageSize);
+        $total = $this->queryPackageSubscribersCount($request, null);
+        $numPages = (int)max(1, ceil($total / $pageSize));
+        $adminPackages = MasterData::where('type', 'PACKAGE')->orderBy('id')->get();
+        $onlinePackages = OnlinePackage::where('is_active', true)->orderBy('id')->get();
+        return [
+            'code' => '200',
+            'html' => view('admin.dashboard.package-subscribers-data')->with([
+                'currentPage' => $pageRequested,
+                'pageSize' => $pageSize,
+                'total' => $total,
+                'numPages' => $numPages,
+                'subscribers' => $subscribers,
+                'adminPackages' => $adminPackages,
+                'onlinePackages' => $onlinePackages,
+            ])->render(),
+        ];
+    }
+
+    private function queryPackageSubscribers(Request $request = null, $whereExtra = null, $page = 1, $pageSize = 10)
+    {
+        $query = DB::table('users as u')
+            ->select(
+                'u.id',
+                'u.dataid',
+                'u.first_name',
+                'u.last_name',
+                'u.email',
+                'u.contact_mobile_number',
+                'u.package as admin_package_dataid',
+                'u.online_package as online_package_dataid',
+                'u.online_package_started_at',
+                'u.online_package_expires_at',
+                'mp.name as admin_package_name',
+                'op.name as online_package_name'
+            )
+            ->leftJoin('masterdata as mp', function ($j) {
+                $j->on('u.package', '=', 'mp.dataid')->where('mp.type', '=', 'PACKAGE');
+            })
+            ->leftJoin('online_packages as op', function ($j) {
+                $j->on('u.online_package', '=', 'op.dataid')->where('op.is_active', '=', 1);
+            })
+            ->where(function ($q) {
+                $q->where(function ($q2) {
+                    $q2->whereNotNull('u.package')->where('u.package', '!=', '');
+                })->orWhere(function ($q2) {
+                    $q2->whereNotNull('u.online_package')->where('u.online_package', '!=', '');
+                });
+            });
+        // Apply filters from request
+        if ($request) {
+            $term = $request->input('term');
+            if (!empty($term)) {
+                $t = '%' . strtolower($term) . '%';
+                $query->where(function ($q) use ($t) {
+                    $q->whereRaw('LOWER(u.first_name) LIKE ?', [$t])
+                        ->orWhereRaw('LOWER(u.last_name) LIKE ?', [$t])
+                        ->orWhereRaw('LOWER(u.email) LIKE ?', [$t])
+                        ->orWhereRaw('LOWER(u.dataid) LIKE ?', [$t])
+                        ->orWhereRaw('LOWER(u.contact_mobile_number) LIKE ?', [$t]);
+                });
+            }
+            $packageType = $request->input('package_type');
+            if ($packageType === 'admin_only') {
+                $query->whereNotNull('u.package')->where('u.package', '!=', '');
+            } elseif ($packageType === 'online_only') {
+                $query->whereNotNull('u.online_package')->where('u.online_package', '!=', '');
+            }
+            $package = $request->input('package');
+            if (!empty($package)) {
+                $filterBy = $request->input('package_filter_type', 'admin');
+                if ($filterBy === 'online') {
+                    $query->where('u.online_package', '=', $package);
+                } else {
+                    $query->where('u.package', '=', $package);
+                }
+            }
+        }
+        if ($whereExtra) {
+            $query->whereRaw($whereExtra);
+        }
+        $offset = ($page - 1) * $pageSize;
+        return $query->orderBy('u.updated_at', 'desc')->offset($offset)->limit($pageSize)->get();
+    }
+
+    private function queryPackageSubscribersCount(Request $request = null, $whereExtra = null)
+    {
+        $query = DB::table('users as u')
+            ->leftJoin('masterdata as mp', function ($j) {
+                $j->on('u.package', '=', 'mp.dataid')->where('mp.type', '=', 'PACKAGE');
+            })
+            ->leftJoin('online_packages as op', function ($j) {
+                $j->on('u.online_package', '=', 'op.dataid')->where('op.is_active', '=', 1);
+            })
+            ->where(function ($q) {
+                $q->where(function ($q2) {
+                    $q2->whereNotNull('u.package')->where('u.package', '!=', '');
+                })->orWhere(function ($q2) {
+                    $q2->whereNotNull('u.online_package')->where('u.online_package', '!=', '');
+                });
+            });
+        if ($request) {
+            $term = $request->input('term');
+            if (!empty($term)) {
+                $t = '%' . strtolower($term) . '%';
+                $query->where(function ($q) use ($t) {
+                    $q->whereRaw('LOWER(u.first_name) LIKE ?', [$t])
+                        ->orWhereRaw('LOWER(u.last_name) LIKE ?', [$t])
+                        ->orWhereRaw('LOWER(u.email) LIKE ?', [$t])
+                        ->orWhereRaw('LOWER(u.dataid) LIKE ?', [$t])
+                        ->orWhereRaw('LOWER(u.contact_mobile_number) LIKE ?', [$t]);
+                });
+            }
+            $packageType = $request->input('package_type');
+            if ($packageType === 'admin_only') {
+                $query->whereNotNull('u.package')->where('u.package', '!=', '');
+            } elseif ($packageType === 'online_only') {
+                $query->whereNotNull('u.online_package')->where('u.online_package', '!=', '');
+            }
+            $package = $request->input('package');
+            if (!empty($package)) {
+                $filterBy = $request->input('package_filter_type', 'admin');
+                if ($filterBy === 'online') {
+                    $query->where('u.online_package', '=', $package);
+                } else {
+                    $query->where('u.package', '=', $package);
+                }
+            }
+        }
+        if ($whereExtra) {
+            $query->whereRaw($whereExtra);
+        }
+        return $query->count();
     }
 
     function renderUpdatePackageModal($dataid)

@@ -35,6 +35,8 @@ Route::get('admin/interests', [App\Http\Controllers\AdminController::class, 'int
 Route::post('admin/interests/refresh', [App\Http\Controllers\AdminController::class, 'refreshInterests']); // list all interests in admin dashboard
 Route::get('admin/packages', [App\Http\Controllers\AdminController::class, 'packages']);
 Route::get('admin/packages/modal/{id?}', [App\Http\Controllers\AdminController::class, 'renderPackagesModal']);
+Route::get('admin/package-subscribers', [App\Http\Controllers\AdminController::class, 'packageSubscribers']);
+Route::post('admin/package-subscribers/refresh', [App\Http\Controllers\AdminController::class, 'refreshPackageSubscribers']);
 // admin profile routes
 Route::delete('admin/profile/{id}',[App\Http\Controllers\AdminController::class, 'deleteProfile']); // delete profile in admin dashboard
 Route::get('admin/profile/toggle/{user}', [App\Http\Controllers\AdminController::class, 'toggleActive']); // toggle status of profile in admin dashboard

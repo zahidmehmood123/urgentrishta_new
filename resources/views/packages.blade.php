@@ -1,5 +1,7 @@
 @extends('layouts.master')
 @section('main-content')
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <?php use App\User; ?>
 <style>
     .ss-banner {
@@ -164,33 +166,14 @@
         display: flex;
         justify-content: center;
         gap: 0;
-        margin-bottom: 2rem;
-        /* border-bottom: 2px solid #e0e0e0; */
-        flex-wrap: wrap;
+        margin-bottom: 2rem; 
+        /* flex-wrap: wrap; */
     }
-    .package-tabs .tab-btn {
-        padding: 12px 24px;
-        font-size: 16px;
-        font-weight: 600;
-        color: #666;
-        background: transparent;
-        border: none;
-        border: 3px solid #E91E63;
-        margin-bottom: -2px;
-        outline: none;
-        cursor: pointer;
-        transition: color 0.2s, border-color 0.2s;
-
-    }
+    
 
     
      
-    .package-tabs .tab-btn.active,
-    .package-tabs .tab-btn:hover {
-        color: #ffffff;
-        border: 3px solid #E91E63;
-        background: #E91E63;
-    }
+    
     .package-tab-panel {
         display: none;
     }
@@ -212,6 +195,60 @@
     justify-content: space-between;
 }
 
+.buttonWrapper{
+    display:flex;
+    gap:40px;
+}
+
+/* Common Button Style */
+.customBtn {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 17px 40px;
+    border-radius: 14px;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s ease;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+    outline: none;
+}
+button:focus{
+    outline: none;
+    border: none;
+}
+/* White Button */
+.customBtn.btnLight{
+    background:#f5f5f5;
+    color:#c73c61;
+}
+
+.customBtn.btnlight i{
+    color:#2b8dbf;
+    font-size:26px;
+}
+
+/* Pink Gradient Button */
+.btnlight.active{
+    background:linear-gradient(135deg,#d83b6a,#b91d4f);
+    color:#fff;
+}
+/* .customBtn.btnGradient{
+    background:linear-gradient(135deg,#d83b6a,#b91d4f);
+    color:#fff;
+} */
+
+.customBtn.btnlight.active i{
+    color:#fff;
+    font-size:24px;
+}
+
+/* Hover Effect */
+.customBtn:hover{
+    transform:translateY(-3px);
+    box-shadow:0 12px 25px rgba(0,0,0,0.2);
+}
 
     @keyframes zoomout {
         0% {
@@ -245,7 +282,19 @@
             padding: 12px 24px;
             font-size: 13px;
             width: 100%;
+            justify-content: center;
         }
+        .package-tabs { 
+        margin-bottom: 1rem; 
+        flex-wrap: wrap;
+    }
+    .buttonWrapper {
+    display: flex;
+    gap: 25px;
+    margin-bottom: 29px !important;
+}
+
+
     }
 
 
@@ -282,9 +331,15 @@
     <div class="container ss-container mt-5">
         <span class="clearfix"></span>
 
-        <div class="package-tabs" role="tablist">
-            <button type="button" class="tab-btn active" data-tab="online" role="tab" aria-selected="true">Online Packages</button>
-            <button type="button" class="tab-btn" data-tab="premium" role="tab" aria-selected="false">Premium / Admin-Assigned Packages</button>
+        <div class="package-tabs buttonWrapper" role="tablist">
+            <button type="button" class="tab-btn active customBtn btnlight" data-tab="online" role="tab" aria-selected="true">
+            <i class="fa-solid fa-globe"></i>
+            Online Services
+            </button>
+            <button type="button" class="tab-btn customBtn btnlight" data-tab="premium" role="tab" aria-selected="false">
+            <i class="fa-solid fa-gem"></i>
+            Personalised Service
+            </button>
         </div>
 
         <div id="tab-online" class="package-tab-panel active" role="tabpanel">

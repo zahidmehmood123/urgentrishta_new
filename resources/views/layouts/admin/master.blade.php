@@ -33,6 +33,12 @@
                             Packages
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a data-url="{{url('admin/package-subscribers')}}" class="nav-link admin-link p_nav">
+                            <i class="fa fa-users"></i>
+                            Package Subscribers
+                        </a>
+                    </li>
 
                 </ul>
             </div>
