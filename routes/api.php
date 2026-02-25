@@ -26,3 +26,6 @@ Route::post('search', [App\Http\Controllers\API\APIController::class, 'searchPro
 Route::post('emailCheck', [App\Http\Controllers\API\APIController::class, 'emailInUse']);
 Route::post('registerUser', [App\Http\Controllers\API\APIController::class, 'registerUser']);
 Route::post('updateUserProfile', [App\Http\Controllers\API\APIController::class, 'updateUserProfile']);
+
+// Stripe webhook (no CSRF)
+Route::post('stripe/webhook', [App\Http\Controllers\PaymentController::class, 'stripeWebhook'])->name('stripe.webhook');

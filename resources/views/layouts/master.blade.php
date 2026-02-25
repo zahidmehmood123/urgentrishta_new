@@ -201,6 +201,58 @@
             animation-delay: 0.1s;
         }
 
+
+        .appointment-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 18px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #ffffff !important;
+    text-decoration: none;
+    border-radius: 60px;
+    background: linear-gradient(
+            to bottom,
+            #e8c27a 0%,
+            #c9903c 40%,
+            #b87a22 60%,
+            #a96815 100%
+        );
+    box-shadow: inset 0 6px 10px rgba(255,255,255,0.4),
+            inset 0 -6px 10px rgba(0,0,0,0.2),
+            0 10px 20px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    position: relative;
+    margin-top: 10px;
+}
+a.appointment-btn::before{
+    display: none;
+}
+
+    .appointment-btn:hover {
+        transform: translateY(-3px);
+        box-shadow:
+            inset 0 6px 12px rgba(255,255,255,0.5),
+            inset 0 -6px 12px rgba(0,0,0,0.25),
+            0 15px 25px rgba(0,0,0,0.3);
+    }
+
+    .appointment-btn:active {
+        transform: translateY(1px);
+        box-shadow:
+            inset 0 4px 8px rgba(255,255,255,0.4),
+            inset 0 -4px 8px rgba(0,0,0,0.2);
+    }
+
+    .appointment-btn svg {
+        width: 25px;
+        height: 25px;
+        fill: white;
+    }
+
+
+
+
         @-webkit-keyframes animate {
             50% {
                 -ms-transform: scaleY(0);
@@ -586,6 +638,11 @@
                                             <li class="custom-nav">
                                                 <a class="nav-link " href="{{url('contact-us')}}" aria-haspopup="true" aria-expanded="false">
                                                     Contact Us</a>
+                                            </li>
+                                            <li class="custom-nav">
+                                                <a class="appointment-btn" href="https://www.urgentrishta.pk/home/contact_us" aria-haspopup="true" aria-expanded="false">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M216 64C229.3 64 240 74.7 240 88L240 128L400 128L400 88C400 74.7 410.7 64 424 64C437.3 64 448 74.7 448 88L448 128L480 128C515.3 128 544 156.7 544 192L544 480C544 515.3 515.3 544 480 544L160 544C124.7 544 96 515.3 96 480L96 192C96 156.7 124.7 128 160 128L192 128L192 88C192 74.7 202.7 64 216 64zM480 496C488.8 496 496 488.8 496 480L496 416L408 416L408 496L480 496zM496 368L496 288L408 288L408 368L496 368zM360 368L360 288L280 288L280 368L360 368zM232 368L232 288L144 288L144 368L232 368zM144 416L144 480C144 488.8 151.2 496 160 496L232 496L232 416L144 416zM280 416L280 496L360 496L360 416L280 416zM216 176L160 176C151.2 176 144 183.2 144 192L144 240L496 240L496 192C496 183.2 488.8 176 480 176L216 176z"/></svg>						                
+                                                Book An Appointment</a>
                                             </li>
                                         </ul>
                                     </div>

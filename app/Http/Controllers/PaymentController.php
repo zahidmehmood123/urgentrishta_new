@@ -4,22 +4,24 @@ namespace App\Http\Controllers;
 
 use App\OnlinePackage;
 use App\Payment;
-use App\Services\PayPalService;
+use App\Services\StripeService;
 use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
+use Stripe\Webhook;
 
 class PaymentController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'verified']);
+        $this->middleware(['auth', 'verified'])->except(['stripeWebhook']);
     }
 
     /**
-     * Start checkout for an online package (PayPal Checkout).
+     * Start checkout for an online package (Stripe Checkout).
      * User cannot subscribe to another online package until the current one expires.
      */
     public function startOnlinePackageCheckout($packageId)
@@ -38,7 +40,7 @@ class PaymentController extends Controller
         $package = OnlinePackage::where('is_active', true)->findOrFail($packageId);
         $meta = $package->meta();
 
-        $amount = isset($meta['price']) ? (float)$meta['price'] : 0.0;
+        $amount = isset($meta['price']) ? (float) $meta['price'] : 0.0;
         if ($amount <= 0) {
             abort(500, 'Package price is not configured.');
         }
@@ -46,65 +48,56 @@ class PaymentController extends Controller
         $payment = Payment::create([
             'user_id' => $user->id,
             'online_package_id' => $package->id,
-            'gateway' => 'paypal',
-            'reference' => (string)Str::uuid(),
-            'currency' => (string)($meta['currency'] ?? 'USD'),
+            'gateway' => 'stripe',
+            'reference' => (string) Str::uuid(),
+            'currency' => (string) ($meta['currency'] ?? 'USD'),
             'amount' => $amount,
             'status' => 'initiated',
         ]);
 
-        $paypal = new PayPalService();
-        if (!$paypal->isConfigured()) {
-            Log::warning('PayPal checkout attempted but PayPal is not configured (missing PAYPAL_CLIENT_ID or PAYPAL_SECRET in .env)');
-            Session::flash('message', 'danger|PayPal is not configured. Please set PAYPAL_CLIENT_ID and PAYPAL_SECRET in .env (use Sandbox credentials from developer.paypal.com).');
-            return redirect('packages');
-        }
+        $stripe = new StripeService();
+        $session = $stripe->createCheckoutSession($payment, $package);
 
-        $order = $paypal->createOrder($payment, $package);
-
-        if (!$order) {
-            Log::warning('PayPal createOrder returned null', ['payment_reference' => $payment->reference]);
-            Session::flash('message', 'danger|Unable to start PayPal checkout. Check storage/logs/laravel.log for details, or verify your PayPal Sandbox credentials in .env.');
-            return redirect('packages');
-        }
-
-        $payment->gateway_txid = $order['order_id'];
+        $payment->gateway_txid = $session->id;
         $payment->save();
 
-        return redirect()->away($order['approval_url']);
+        return redirect()->away($session->url);
     }
 
-    public function paypalSuccess(Request $request, $reference)
+    public function stripeSuccess(Request $request, $reference)
     {
         $payment = Payment::where('reference', $reference)->first();
-        if (!$payment) {
+        if (! $payment) {
             Session::flash('message', 'danger|Payment not found.');
             return redirect('home');
         }
 
-        $token = $request->query('token'); // PayPal order ID
-        if ($payment->status !== 'paid' && !empty($token)) {
-            $this->tryCapturePayPalOrder($payment, $token);
+        if ($payment->status !== 'paid') {
+            $this->tryActivateFromStripeSession($payment, $request->query('session_id'));
         }
 
         $payment->refresh();
         if ($payment->status === 'paid') {
             Session::flash('message', 'success|Payment successful. Your package is now active. You can search Soul Mates.');
         } else {
-            Session::flash('message', 'info|Payment not yet completed. If you paid, your package will be activated shortly.');
+            Session::flash('message', 'info|Payment received. Your package will be activated shortly.');
         }
 
         return redirect('home');
     }
 
     /**
-     * Capture PayPal order and mark payment as paid, then activate package.
+     * When user returns from Stripe, activate package from Checkout Session if payment succeeded.
      */
-    private function tryCapturePayPalOrder(Payment $payment, string $orderId): void
+    private function tryActivateFromStripeSession(Payment $payment, ?string $sessionId): void
     {
+        if (empty($sessionId) || empty(Config::get('services.stripe.secret'))) {
+            return;
+        }
         try {
-            $paypal = new PayPalService();
-            if (!$paypal->captureOrder($orderId)) {
+            $stripe = new \Stripe\StripeClient(Config::get('services.stripe.secret'));
+            $session = $stripe->checkout->sessions->retrieve($sessionId, ['expand' => ['payment_intent']]);
+            if (($session->payment_status ?? '') !== 'paid') {
                 return;
             }
             $payment->status = 'paid';
@@ -112,11 +105,11 @@ class PaymentController extends Controller
             $payment->save();
             $this->activatePaidOnlinePackage($payment);
         } catch (\Throwable $e) {
-            Log::warning('PayPal capture failed on return', ['reference' => $payment->reference, 'error' => $e->getMessage()]);
+            Log::warning('Stripe success-page activation failed', ['reference' => $payment->reference, 'error' => $e->getMessage()]);
         }
     }
 
-    public function paypalCancel(Request $request, $reference)
+    public function stripeCancel(Request $request, $reference)
     {
         $payment = Payment::where('reference', $reference)->first();
         if ($payment && $payment->status === 'initiated') {
@@ -129,15 +122,53 @@ class PaymentController extends Controller
     }
 
     /**
+     * Stripe webhook endpoint.
+     */
+    public function stripeWebhook(Request $request)
+    {
+        $webhookSecret = (string) Config::get('services.stripe.webhook_secret');
+        $payload = $request->getContent();
+        $sigHeader = (string) $request->header('Stripe-Signature', '');
+
+        try {
+            $event = ! empty($webhookSecret)
+                ? Webhook::constructEvent($payload, $sigHeader, $webhookSecret)
+                : json_decode($payload, false);
+        } catch (\Throwable $e) {
+            Log::warning('Stripe webhook signature verification failed', ['error' => $e->getMessage()]);
+
+            return response('Invalid signature', 400);
+        }
+
+        if (($event->type ?? '') === 'checkout.session.completed') {
+            $session = $event->data->object ?? null;
+            $reference = (string) ($session->client_reference_id ?? ($session->metadata->payment_reference ?? ''));
+
+            if (! empty($reference)) {
+                $payment = Payment::where('reference', $reference)->first();
+                if ($payment && $payment->status !== 'paid') {
+                    $payment->status = 'paid';
+                    $payment->paid_at = now();
+                    $payment->gateway_payload = $payload;
+                    $payment->gateway_txid = (string) ($session->payment_intent ?? $session->id ?? $payment->gateway_txid);
+                    $payment->save();
+
+                    $this->activatePaidOnlinePackage($payment);
+                }
+            }
+        }
+
+        return response('ok', 200);
+    }
+
+    /**
      * Activate the purchased online package for the user.
-     * Uses User::activateOnlinePackage() which sets only online_package, online_package_started_at,
-     * online_package_expires_at (does not touch admin package column).
      */
     private function activatePaidOnlinePackage(Payment $payment): void
     {
         $user = User::find($payment->user_id);
         $package = OnlinePackage::find($payment->online_package_id);
-        if (!$user || !$package) {
+        if (! $user || ! $package) {
             return;
         }
 
